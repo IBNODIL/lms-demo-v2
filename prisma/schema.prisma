@@ -8,38 +8,34 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  name          String?
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  accounts Account[]
-  sessions Session[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts  Account[]
 }
 
 model Session {
   id        String   @id @default(cuid())
   userId    String
   expiresAt DateTime
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Account {
-  id                String @id @default(cuid())
-  userId            String
-  accountId         String
-  providerId        String
-  accessToken       String?
-  refreshToken      String?
-  accessTokenExpiresAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Verification {
+model Account {
+  id                 String @id @default(cuid())
+  userId             String
+  providerId         String
+  providerAccountId  String
+  type               String
+  hashedPassword     String?
+  user               User   @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
   id         String   @id @default(cuid())
   identifier String
   value      String

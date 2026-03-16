@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/validation";
@@ -11,6 +12,8 @@ type FormData = z.infer<typeof registerSchema>;
 
 export default function RegisterForm() {
   const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -21,17 +24,37 @@ export default function RegisterForm() {
   });
 
   const onSubmit = async (data: FormData) => {
-    await authClient.signUp.email({
-      email: data.email,
-      password: data.password,
-      name: data.username,
-    });
+    setServerError(null);
+    setLoading(true);
 
-    router.push("/login");
+    try {
+      const { error } = await authClient.signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.username,
+      });
+
+      if (error) {
+        console.error("REGISTER ERROR:", error);
+        setServerError(error?.message || "Something went wrong");
+        return;
+      }
+
+      router.push("/login");
+    } catch (err) {
+      console.error("UNEXPECTED ERROR:", err);
+      setServerError("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+      {serverError && (
+        <p className="text-red-500 text-sm">{serverError}</p>
+      )}
 
       <div>
         <input
@@ -40,9 +63,7 @@ export default function RegisterForm() {
           className="w-full border p-2 rounded"
         />
         {errors.email && (
-          <p className="text-red-500 text-sm">
-            {errors.email.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.email.message}</p>
         )}
       </div>
 
@@ -53,9 +74,7 @@ export default function RegisterForm() {
           className="w-full border p-2 rounded"
         />
         {errors.username && (
-          <p className="text-red-500 text-sm">
-            {errors.username.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.username.message}</p>
         )}
       </div>
 
@@ -67,17 +86,16 @@ export default function RegisterForm() {
           className="w-full border p-2 rounded"
         />
         {errors.password && (
-          <p className="text-red-500 text-sm">
-            {errors.password.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}
       </div>
 
       <button
         type="submit"
-        className="w-full bg-black text-white py-2 rounded"
+        disabled={loading}
+        className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
       >
-        Register
+        {loading ? "Creating account..." : "Register"}
       </button>
     </form>
   );

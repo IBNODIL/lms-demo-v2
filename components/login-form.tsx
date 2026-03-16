@@ -39,7 +39,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       console.error("UNEXPECTED ERROR:", err);
       setServerError("Something went wrong.");

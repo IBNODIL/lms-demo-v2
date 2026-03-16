@@ -40,7 +40,7 @@ export default function RegisterForm() {
         return;
       }
 
-      router.push("/login");
+      router.push("/");
     } catch (err) {
       console.error("UNEXPECTED ERROR:", err);
       setServerError("Something went wrong.");

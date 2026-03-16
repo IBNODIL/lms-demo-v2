@@ -1,52 +1,30 @@
-"use client";
-
-import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import RegisterForm from "@/components/register-form";
+import Link from "next/link";
 
 export default function RegisterPage() {
-  const [email,setEmail] = useState("");
-  const [username,setUsername] = useState("");
-  const [password,setPassword] = useState("");
-
-  const register = async () => {
-    await authClient.signUp.email({
-      email,
-      password,
-      name: username
-    });
-  };
-
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="w-[400px] p-6 shadow-xl rounded-2xl">
-        <h1 className="text-2xl font-bold mb-4">Register</h1>
+    <div className="flex items-center justify-center h-screen">
 
-        <input
-          placeholder="Email"
-          onChange={(e)=>setEmail(e.target.value)}
-          className="border p-2 w-full mb-2"
-        />
+      <div className="w-[400px] p-6 border rounded-xl shadow">
 
-        <input
-          placeholder="Username"
-          onChange={(e)=>setUsername(e.target.value)}
-          className="border p-2 w-full mb-2"
-        />
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Create account
+        </h1>
 
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e)=>setPassword(e.target.value)}
-          className="border p-2 w-full mb-2"
-        />
+        <RegisterForm />
 
-        <button
-          onClick={register}
-          className="bg-black text-white w-full py-2 rounded"
-        >
-          Register
-        </button>
+        <div className="mt-6 text-center text-sm">
+          Already have an account?
+          <Link
+            href="/login"
+            className="text-blue-500 ml-1"
+          >
+            Login
+          </Link>
+        </div>
+
       </div>
+
     </div>
   );
 }

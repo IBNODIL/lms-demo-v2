@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "./prisma";
+import { prisma } from "@/lib/prisma"
+import { prismaAdapter } from "better-auth/adapters/prisma"
 import { sendEmail } from "./email";
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma),
+//   database: prismaAdapter(prisma),
 
   emailAndPassword: {
     enabled: true,
@@ -13,37 +13,21 @@ export const auth = betterAuth({
 
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your email",
-        html: `
-          <h1>Verify your email</h1>
-          <a href="${url}">Click to verify</a>
-        `,
-      });
+      await sendEmail(
+        user.email,
+        "Verify your email",
+        `<a href="${url}">Verify email</a>`
+      );
     },
   },
 
-  resetPassword: {
-    sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your password",
-        html: `
-          <h1>Reset password</h1>
-          <a href="${url}">Reset password</a>
-        `,
-      });
-    },
-  },
-
-  user: {
-    additionalFields: {
-      username: {
-        type: "string",
-        required: true,
-        unique: true,
-      },
-    },
-  },
+//   resetPassword: {
+//     sendResetPassword: async ({ user, url }) => {
+//       await sendEmail(
+//         user.email,
+//         "Reset password",
+//         `<a href="${url}">Reset password</a>`
+//       );
+//     },
+//   },
 });

@@ -14,20 +14,49 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const courses = await prisma.course.findMany({
-      where: {
-        published: true,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
+    // Get user role
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    // Teachers can see all their own courses (including drafts)
+    // Students only see published courses
+    let courses;
+    
+    if (user?.role === "TEACHER") {
+      courses = await prisma.course.findMany({
+        where: {
+          userId: session.user.id,
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-      take: 20,
-    });
+        orderBy: { createdAt: "desc" },
+      });
+    } else {
+      // Students see all published courses
+      courses = await prisma.course.findMany({
+        where: {
+          published: true,
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+    }
 
     return NextResponse.json(courses);
   } catch (error) {

@@ -1,29 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CourseList } from "@/components/course-list";
+
+interface Course {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  price: number;
+}
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = async (query: string) => {
+  useEffect(() => {
+    fetchAllCourses();
+  }, []);
+
+  const fetchAllCourses = async () => {
+    try {
+      const response = await fetch("/api/courses");
+      if (response.ok) {
+        const data = await response.json();
+        setAllCourses(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setIsSearching(true);
+
     if (!query.trim()) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
-    setIsSearching(true);
-    try {
-      // TODO: Search courses
-      setIsSearching(false);
-    } catch (error) {
-      console.error(error);
-      setIsSearching(false);
-    }
+    // Search in title and description
+    const filtered = allCourses.filter((course) => {
+      const searchLower = query.toLowerCase();
+      return (
+        course.title.toLowerCase().includes(searchLower) ||
+        (course.description && course.description.toLowerCase().includes(searchLower))
+      );
+    });
+
+    setSearchResults(filtered);
+    setIsSearching(false);
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Loading courses...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -42,7 +84,12 @@ export default function SearchPage() {
         />
       </div>
 
-      {searchQuery && (
+      {!searchQuery ? (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">All Courses</h2>
+          <CourseList courses={allCourses} />
+        </div>
+      ) : (
         <div>
           {isSearching ? (
             <div className="text-center py-12">Searching...</div>

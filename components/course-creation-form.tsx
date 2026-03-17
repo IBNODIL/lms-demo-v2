@@ -60,6 +60,13 @@ export function CourseCreationForm() {
         </div>
       )}
 
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-900">
+          <strong>📝 Note:</strong> Your course will be created as a <strong>draft</strong>. 
+          After creation, you can add chapters, upload videos, and then publish your course to make it visible to students.
+        </p>
+      </div>
+
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
           Course Title <span className="text-red-500">*</span>

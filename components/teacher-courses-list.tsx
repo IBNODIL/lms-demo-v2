@@ -128,6 +128,11 @@ export function TeacherCoursesList() {
                   {course.description && (
                     <p className="text-gray-600 mt-2 line-clamp-2">{course.description}</p>
                   )}
+                  {!course.published && (
+                    <p className="text-xs text-amber-600 mt-2 font-medium">
+                      ⚠️ Add chapters and content before publishing
+                    </p>
+                  )}
                   <div className="mt-4 flex items-center gap-6">
                     <div>
                       <p className="text-sm text-gray-500">Price</p>

@@ -8,7 +8,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    verifyEmail: false,
+    requireEmailVerification: false,
   },
   secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-change-in-production",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",

@@ -14,10 +14,20 @@ model User {
   emailVerified Boolean   @default(false)
   name          String?
   image         String?
+  role          Role      @default(STUDENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
   accounts      Account[]
   sessions      Session[]
+  courses       Course[]
+  purchases     Purchase[]
+  progress      Progress[]
+}
+
+enum Role {
+  STUDENT
+  TEACHER
 }
 
 model Session {
@@ -55,4 +65,82 @@ model VerificationToken {
   identifier String
   value      String
   expiresAt  DateTime
+}
+
+// Course Models
+model Course {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  price       Float     @default(0)
+  published   Boolean   @default(false)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  categoryId  String?
+  
+  chapters    Chapter[]
+  purchases   Purchase[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model Chapter {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  videoUrl    String?
+  position    Int
+  isPublished Boolean   @default(false)
+  
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  progress    Progress[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([courseId])
+  @@unique([courseId, position])
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  chapterId   String
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  
+  isCompleted Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, chapterId])
+  @@index([userId])
+  @@index([chapterId])
 }

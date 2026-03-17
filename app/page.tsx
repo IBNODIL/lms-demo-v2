@@ -53,8 +53,8 @@ export default function MainPage() {
   const user = session.user;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="flex items-center justify-between bg-white shadow p-4">
+    <div className="min-h-screen bg-gray-100">
+      <nav className="flex items-center justify-between shadow-xl p-4">
         <h1 className="text-xl font-bold">My App</h1>
 
         <DropdownMenu>

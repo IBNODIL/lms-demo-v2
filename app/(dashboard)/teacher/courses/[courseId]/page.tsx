@@ -17,7 +17,7 @@ export default async function EditCoursePage({
     headers: headersList,
   });
 
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/login");
   }
 

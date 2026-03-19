@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Search, BookOpen, Settings, X } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { useUser } from "@/hooks/use-user";
 
 interface SidebarProps {
   open: boolean;
@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ open, setOpen }: SidebarProps) {
   const pathname = usePathname();
-  const { data: session } = authClient.useSession();
+  const { user } = useUser();
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -72,7 +72,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
           })}
         </nav>
 
-        {session && (
+        {user && user.role === "TEACHER" && (
           <>
             <div className="my-4 mx-4 border-t" />
             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">

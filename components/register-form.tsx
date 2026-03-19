@@ -14,6 +14,7 @@ export default function RegisterForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
 
   const {
     register,
@@ -38,6 +39,23 @@ export default function RegisterForm() {
         console.error("REGISTER ERROR:", error);
         setServerError(error?.message || "Something went wrong");
         return;
+      }
+
+      // If teacher role selected, update the user role
+      if (isTeacher) {
+        try {
+          const roleRes = await fetch("/api/auth/update-role", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: data.email, role: "TEACHER" }),
+          });
+          
+          if (!roleRes.ok) {
+            console.warn("Failed to set teacher role");
+          }
+        } catch (err) {
+          console.warn("Could not update role:", err);
+        }
       }
 
       router.push("/");
@@ -88,6 +106,19 @@ export default function RegisterForm() {
         {errors.password && (
           <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="isTeacher"
+          checked={isTeacher}
+          onChange={(e) => setIsTeacher(e.target.checked)}
+          className="w-4 h-4 rounded"
+        />
+        <label htmlFor="isTeacher" className="text-sm text-gray-700">
+          I want to create and teach courses
+        </label>
       </div>
 
       <button

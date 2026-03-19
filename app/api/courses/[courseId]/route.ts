@@ -9,11 +9,27 @@ export async function GET(
 ) {
   try {
     const { courseId } = await params;
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList,
+    });
+
     const course = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    // Teachers can see all chapters, students only see published
+    const isOwner = session?.user?.id === course.userId;
+
+    const courseWithChapters = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
         chapters: {
-          where: { isPublished: true },
+          where: isOwner ? {} : { isPublished: true },
           orderBy: { position: "asc" },
         },
         user: {
@@ -22,11 +38,7 @@ export async function GET(
       },
     });
 
-    if (!course) {
-      return NextResponse.json({ error: "Course not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(course);
+    return NextResponse.json(courseWithChapters);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

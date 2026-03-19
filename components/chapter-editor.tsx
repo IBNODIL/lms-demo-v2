@@ -160,9 +160,39 @@ export function ChapterEditor({
                 disabled={loading}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500">
-                Enter the video URL (MP4 format recommended). You can use Mux URLs or other video hosting services.
-              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-900 space-y-2">
+                <p className="font-semibold">💡 Example video URLs for testing:</p>
+                <ul className="space-y-1 list-disc list-inside">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({...prev, videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4"}))}
+                      className="hover:underline text-blue-600"
+                    >
+                      Big Buck Bunny (Blender)
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({...prev, videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4"}))}
+                      className="hover:underline text-blue-600"
+                    >
+                      Elephant's Dream
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({...prev, videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4"}))}
+                      className="hover:underline text-blue-600"
+                    >
+                      For Bigger Blazes
+                    </button>
+                  </li>
+                </ul>
+                <p className="text-xs mt-2">Or paste your own video URL (MP4, WebM, or Mux URLs supported)</p>
+              </div>
             </div>
           </div>
 

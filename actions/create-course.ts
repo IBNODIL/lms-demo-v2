@@ -37,7 +37,7 @@ export async function createCourse(data: {
         price: data.price || 0,
         userId: session.user.id,
         categoryId: data.categoryId || null,
-        published: true, // Publish by default
+        published: false, // Draft by default
       },
     });
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save, BookOpen, Settings } from "lucide-react";
+import { Save, BookOpen, Settings, Upload, X } from "lucide-react";
 import { ChaptersList } from "./chapters-list";
 import { updateCourse } from "@/actions/create-course";
 
@@ -44,11 +45,16 @@ export function CourseEditor({
     title: course.title,
     description: course.description || "",
     price: course.price.toString(),
+    imageUrl: course.imageUrl || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [chapters, setChapters] = useState(initialChapters);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    course.imageUrl || null
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -60,20 +66,50 @@ export function CourseEditor({
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData((prev) => ({
+      ...prev,
+      imageUrl: "",
+    }));
+  };
+
   const handleSave = async () => {
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
+      let imageUrl = formData.imageUrl;
+
+      // If image file was selected, create a data URL (in production, you'd upload to a service)
+      if (imageFile && imagePreview) {
+        imageUrl = imagePreview;
+      }
+
       const result = await updateCourse(course.id, {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price) || 0,
+        imageUrl: imageUrl || undefined,
       });
 
       if (result.success) {
         setSuccess(true);
+        setImageFile(null);
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError(result.error || "Failed to save course");
@@ -157,6 +193,117 @@ export function CourseEditor({
       {/* Course Details Tab */}
       {activeTab === "details" && (
         <div className="bg-white rounded-lg shadow p-6 space-y-6">
+          {/* Course Overview Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-6 border-b">
+            <div className="md:col-span-1">
+              <div className="bg-gray-100 rounded-lg overflow-hidden h-48">
+                {imagePreview ? (
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={imagePreview}
+                      alt={formData.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-linear-to-br from-blue-400 to-blue-600 text-white text-3xl font-semibold">
+                    {formData.title[0] || "C"}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                  Course Statistics
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 rounded p-3">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {chapters.length}
+                    </p>
+                    <p className="text-xs text-gray-600">Chapters</p>
+                  </div>
+                  <div className="bg-green-50 rounded p-3">
+                    <p className="text-2xl font-bold text-green-600">
+                      ${parseFloat(formData.price) || 0}
+                    </p>
+                    <p className="text-xs text-gray-600">Price</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                  Course Metadata
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Created: {new Date(course.createdAt).toLocaleDateString()}
+                </p>
+                <p className="text-xs text-gray-600">
+                  Updated: {new Date(course.updatedAt).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-800">
+                  <strong>Status:</strong>{" "}
+                  {course.published ? (
+                    <span className="text-green-600 font-semibold">
+                      Published
+                    </span>
+                  ) : (
+                    <span className="text-gray-600">Draft</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Course Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Course Cover Image
+            </label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Upload size={18} className="text-gray-600" />
+                    <span className="text-sm text-gray-600">
+                      Click to upload image
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {imagePreview && (
+                <Button
+                  onClick={removeImage}
+                  disabled={loading}
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                >
+                  <X size={16} />
+                  Remove Image
+                </Button>
+              )}
+              <p className="text-xs text-gray-500">
+                Recommended size: 400x300px. Supported formats: JPG, PNG, WebP
+              </p>
+            </div>
+          </div>
+
+          {/* Course Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Course Title
@@ -167,9 +314,11 @@ export function CourseEditor({
               onChange={handleChange}
               disabled={loading}
               className="w-full"
+              placeholder="Enter course title"
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
@@ -180,41 +329,37 @@ export function CourseEditor({
               onChange={handleChange}
               disabled={loading}
               rows={5}
+              placeholder="Describe what students will learn in this course..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
+          {/* Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Price (USD)
             </label>
-            <Input
-              name="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.price}
-              onChange={handleChange}
-              disabled={loading}
-              className="w-full"
-            />
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Status:</strong>{" "}
-              {course.published ? (
-                <span className="text-green-600 font-semibold">Published</span>
-              ) : (
-                <span className="text-gray-600">Draft</span>
-              )}
-            </p>
-            <p className="text-sm text-blue-700 mt-2">
-              Add chapters and content before publishing your course.
+            <div className="flex items-center gap-2">
+              <span className="text-lg text-gray-600">$</span>
+              <Input
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={handleChange}
+                disabled={loading}
+                className="w-full"
+                placeholder="0.00"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Set to 0 for a free course
             </p>
           </div>
 
-          <div className="flex gap-4">
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4 border-t">
             <Button
               onClick={handleSave}
               disabled={loading}

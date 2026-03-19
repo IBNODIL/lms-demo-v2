@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Menu, X } from "lucide-react";
@@ -30,21 +30,19 @@ export function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/dashboard"
-              className={`px-3 py-2 rounded-lg transition-colors ${
-                pathname === "/dashboard"
+              className={`px-3 py-2 rounded-lg transition-colors ${pathname === "/dashboard"
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               Dashboard
             </Link>
             <Link
               href="/search"
-              className={`px-3 py-2 rounded-lg transition-colors ${
-                pathname === "/search"
+              className={`px-3 py-2 rounded-lg transition-colors ${pathname === "/search"
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               Search
             </Link>
@@ -76,6 +74,7 @@ export function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
                   onClick={async () => {
                     await authClient.signOut();
                     setDropdownOpen(false);
+                    redirect("/login");
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >

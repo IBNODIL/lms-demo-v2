@@ -38,6 +38,8 @@ export function ChapterEditor({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -47,6 +49,7 @@ export function ChapterEditor({
       ...prev,
       [name]: value,
     }));
+    setHasChanges(true);
   };
 
   const handleTogglePublish = () => {
@@ -54,6 +57,7 @@ export function ChapterEditor({
       ...prev,
       isPublished: !prev.isPublished,
     }));
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
@@ -62,6 +66,7 @@ export function ChapterEditor({
       return;
     }
 
+    setShowConfirmDialog(false);
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -76,6 +81,7 @@ export function ChapterEditor({
 
       if (result.success && result.chapter) {
         setSuccess(true);
+        setHasChanges(false);
         onUpdate(result.chapter);
         setTimeout(() => {
           onClose();
@@ -88,6 +94,14 @@ export function ChapterEditor({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveClick = () => {
+    if (!formData.title.trim()) {
+      setError("Chapter title is required");
+      return;
+    }
+    setShowConfirmDialog(true);
   };
 
   return (
@@ -256,14 +270,41 @@ export function ChapterEditor({
             Cancel
           </Button>
           <Button
-            onClick={handleSave}
-            disabled={loading || !formData.title.trim()}
+            onClick={handleSaveClick}
+            disabled={loading || !formData.title.trim() || !hasChanges}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
             <Save size={18} />
             Save Chapter
           </Button>
         </div>
+
+        {/* Save Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+            <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 mx-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Save Changes?</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to save these changes to this chapter?
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors disabled:opacity-50"
+                >
+                  {loading ? "Saving..." : "Confirm Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

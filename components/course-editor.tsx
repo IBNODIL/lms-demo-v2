@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Save, BookOpen, Settings, Upload, X } from "lucide-react";
 import { ChaptersList } from "./chapters-list";
 import { updateCourse } from "@/actions/create-course";
+import { formatDateConsistent } from "@/lib/date-utils";
 
 interface Course {
   id: string;
@@ -55,6 +56,8 @@ export function CourseEditor({
   const [imagePreview, setImagePreview] = useState<string | null>(
     course.imageUrl || null
   );
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -64,6 +67,7 @@ export function CourseEditor({
       ...prev,
       [name]: value,
     }));
+    setHasChanges(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +79,7 @@ export function CourseEditor({
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      setHasChanges(true);
     }
   };
 
@@ -85,9 +90,11 @@ export function CourseEditor({
       ...prev,
       imageUrl: "",
     }));
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
+    setShowConfirmDialog(false);
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -110,6 +117,7 @@ export function CourseEditor({
       if (result.success) {
         setSuccess(true);
         setImageFile(null);
+        setHasChanges(false);
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError(result.error || "Failed to save course");
@@ -119,6 +127,10 @@ export function CourseEditor({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveClick = () => {
+    setShowConfirmDialog(true);
   };
 
   const handlePublish = async () => {
@@ -240,10 +252,10 @@ export function CourseEditor({
                   Course Metadata
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Created: {new Date(course.createdAt).toLocaleDateString()}
+                  Created: {formatDateConsistent(course.createdAt)}
                 </p>
                 <p className="text-xs text-gray-600">
-                  Updated: {new Date(course.updatedAt).toLocaleDateString()}
+                  Updated: {formatDateConsistent(course.updatedAt)}
                 </p>
               </div>
 
@@ -361,8 +373,8 @@ export function CourseEditor({
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4 border-t">
             <Button
-              onClick={handleSave}
-              disabled={loading}
+              onClick={handleSaveClick}
+              disabled={loading || !hasChanges}
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
             >
               <Save size={18} />
@@ -389,6 +401,33 @@ export function CourseEditor({
           chapters={chapters}
           onChaptersChange={setChapters}
         />
+      )}
+
+      {/* Save Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Save Changes?</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to save these changes to your course?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors disabled:opacity-50"
+              >
+                {loading ? "Saving..." : "Confirm Save"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

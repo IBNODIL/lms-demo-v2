@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { formatDateConsistent } from "@/lib/date-utils";
 
 interface Course {
   id: string;
@@ -141,7 +142,7 @@ export function TeacherCoursesList() {
                     <div>
                       <p className="text-sm text-gray-500">Created</p>
                       <p className="font-semibold">
-                        {new Date(course.createdAt).toLocaleDateString()}
+                        {formatDateConsistent(course.createdAt)}
                       </p>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
-;import { headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import DashboardContent from "./dashboard-content";
@@ -20,5 +21,11 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return <DashboardContent>{children}</DashboardContent>;
+  // Fetch user role from database
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  return <DashboardContent userRole={user?.role}>{children}</DashboardContent>;
 }

@@ -65,19 +65,29 @@ export default async function LandingPage() {
             and teachers share their expertise.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/register">
-              <Button className="bg-blue-600 hover:bg-blue-700 px-8 py-6 text-lg">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button
-                variant="outline"
-                className="text-white border-white hover:bg-white hover:text-slate-900 px-8 py-6 text-lg"
-              >
-                Explore Courses
-              </Button>
-            </Link>
+            {user ? (
+              <Link href="/dashboard">
+                <Button className="bg-blue-600 hover:bg-blue-700 px-8 py-6 text-lg">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/register">
+                  <Button className="bg-blue-600 hover:bg-blue-700 px-8 py-6 text-lg">
+                    Get Started
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button
+                    variant="outline"
+                    className="text-white border-white hover:bg-white hover:text-slate-900 px-8 py-6 text-lg"
+                  >
+                    Explore Courses
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

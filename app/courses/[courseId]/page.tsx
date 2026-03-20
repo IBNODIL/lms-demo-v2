@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
-import { Play, Clock, BookOpen } from "lucide-react";
+import { Play, Clock, BookOpen, ChevronLeft } from "lucide-react";
 import { EnrollButton } from "@/components/enroll-button";
 
 export default async function CourseDetailsPage({
@@ -18,6 +19,8 @@ export default async function CourseDetailsPage({
   const session = await auth.api.getSession({
     headers: headersList,
   });
+
+  console.log(`[DEBUG] Fetching course: ${courseId}`);
 
   const course = await prisma.course.findUnique({
     where: { id: courseId },
@@ -43,16 +46,26 @@ export default async function CourseDetailsPage({
     },
   });
 
+  console.log(`[DEBUG] Course fetch result:`, {
+    found: !!course,
+    published: course?.published,
+    courseId,
+  });
+
   if (!course) {
+    console.error(`[DEBUG] Course not found: ${courseId}`);
     notFound();
   }
 
   // Check if user is enrolled
   let isEnrolled = false;
   let isOwner = false;
+  let canView = course.published; // Anyone can view published courses
+
   if (session?.user) {
     // Check if user is the course owner
     isOwner = course.user.id === session.user.id;
+    canView = isOwner || course.published; // Owner can always view, otherwise must be published
 
     // Check if user is enrolled
     if (!isOwner) {
@@ -68,8 +81,36 @@ export default async function CourseDetailsPage({
     }
   }
 
+  console.log(`[DEBUG] Course access check:`, {
+    courseId,
+    courseExists: true,
+    coursePublished: course.published,
+    isOwner,
+    isLoggedIn: !!session?.user,
+    canView,
+  });
+
+  // If user can't view this course, redirect to dashboard
+  if (!canView) {
+    // Log debug info
+    console.error(`[DEBUG] Course access denied for courseId: ${courseId}`, {
+      courseExists: true,
+      coursePublished: course.published,
+      isOwner,
+      isLoggedIn: !!session?.user,
+      userId: session?.user?.id,
+      courseOwnerId: course.user.id,
+    });
+    notFound();
+  }
+
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8">
+      <Link href="/dashboard" className="text-blue-600 hover:text-blue-700 mb-6 inline-flex items-center gap-2">
+        <ChevronLeft size={20} />
+        <span>Back to Dashboard</span>
+      </Link>
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
         <p className="text-gray-600 mt-2">
@@ -78,11 +119,12 @@ export default async function CourseDetailsPage({
       </div>
 
       {course.imageUrl && (
-        <div className="mb-8 overflow-hidden rounded-lg shadow-lg">
-          <img
+        <div className="mb-8 overflow-hidden rounded-lg shadow-lg relative w-full h-80">
+          <Image
             src={course.imageUrl}
             alt={course.title}
-            className="w-full h-80 object-cover"
+            fill
+            className="object-cover"
           />
         </div>
       )}
@@ -124,7 +166,7 @@ export default async function CourseDetailsPage({
                   <div key={chapter.id}>
                     {isEnrolled ? (
                       <Link
-                        href={`/dashboard/courses/${course.id}/chapters/${chapter.id}`}
+                        href={`/courses/${course.id}/chapters/${chapter.id}`}
                       >
                         <div className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition cursor-pointer border border-blue-200 hover:shadow-md">
                           <div className="flex items-start justify-between">
@@ -205,7 +247,7 @@ export default async function CourseDetailsPage({
                 <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-500 mb-3">No chapters yet</p>
                 <p className="text-sm text-gray-400">
-                  This course doesn't have any chapters.
+                  This course doesn&apos;t have any chapters.
                 </p>
               </div>
             )}

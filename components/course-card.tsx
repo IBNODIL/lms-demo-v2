@@ -26,7 +26,7 @@ export function CourseCard({
   chaptersTotal,
   chaptersCompleted,
 }: CourseCardProps) {
-  const href = isEnrolled ? `/dashboard/courses/${id}` : `/dashboard/courses/${id}`;
+  const href = `/courses/${id}`;
 
   return (
     <Link href={href}>

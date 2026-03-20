@@ -6,7 +6,7 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Menu, X } from "lucide-react";
 
-export function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
+export function Navbar({ onMenuClick, userRole }: { onMenuClick: () => void; userRole?: string }) {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -64,12 +64,14 @@ export function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
                   <p className="text-sm font-medium">{session?.user?.name}</p>
                   <p className="text-xs text-gray-600">{session?.user?.email}</p>
                 </div>
-                <Link
-                  href="/teacher/courses"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Teacher Dashboard
-                </Link>
+                {userRole === "TEACHER" && (
+                  <Link
+                    href="/teacher/courses"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Teacher Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={async () => {
                     await authClient.signOut();

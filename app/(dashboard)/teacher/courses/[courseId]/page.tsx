@@ -21,6 +21,16 @@ export default async function EditCoursePage({
     redirect("/login");
   }
 
+  // Check if user is a teacher
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  if (user?.role !== "TEACHER") {
+    redirect("/dashboard");
+  }
+
   // Fetch course with chapters
   const course = await prisma.course.findUnique({
     where: { id: courseId },
@@ -44,7 +54,7 @@ export default async function EditCoursePage({
 
   // Check if user is the course owner
   if (course.user.id !== session.user.id) {
-    redirect("/teacher/courses");
+    redirect("/dashboard/teacher/courses");
   }
 
   return (

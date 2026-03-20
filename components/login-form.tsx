@@ -7,6 +7,7 @@ import { loginSchema } from "@/lib/validation";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 type FormData = z.infer<typeof loginSchema>;
 
@@ -14,6 +15,7 @@ export default function LoginForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -39,7 +41,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       console.error("UNEXPECTED ERROR:", err);
       setServerError("Something went wrong.");
@@ -67,12 +69,25 @@ export default function LoginForm() {
       </div>
 
       <div>
-        <input
-          type="password"
-          placeholder="Password"
-          {...register("password")}
-          className="w-full border p-2 rounded"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            {...register("password")}
+            className="w-full border p-2 rounded pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-2.5 text-gray-600 hover:text-gray-800"
+          >
+            {showPassword ? (
+              <EyeOff size={18} />
+            ) : (
+              <Eye size={18} />
+            )}
+          </button>
+        </div>
         {errors.password && (
           <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}

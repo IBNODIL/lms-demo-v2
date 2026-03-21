@@ -73,16 +73,19 @@ export async function publishCourse(courseId: string) {
       throw new Error("Unauthorized");
     }
 
-    // Check if course has at least one published chapter
-    const publishedChapters = await prisma.chapter.count({
+    // Check if course has at least one published chapter with a video
+    const publishedChaptersWithVideo = await prisma.chapter.count({
       where: {
         courseId,
         isPublished: true,
+        videoUrl: {
+          not: null,
+        },
       },
     });
 
-    if (publishedChapters === 0) {
-      throw new Error("Course must have at least one published chapter");
+    if (publishedChaptersWithVideo === 0) {
+      throw new Error("Course must have at least one chapter with a video to be published");
     }
 
     const updated = await prisma.course.update({

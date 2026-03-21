@@ -9,6 +9,7 @@ export async function createChapter(
   courseId: string,
   data: {
     title: string;
+    videoUrl: string;
     description?: string;
   }
 ) {
@@ -20,6 +21,11 @@ export async function createChapter(
 
     if (!session) {
       throw new Error("Unauthorized");
+    }
+
+    // Validate videoUrl is provided
+    if (!data.videoUrl || !data.videoUrl.trim()) {
+      throw new Error("Video URL is required to create a chapter");
     }
 
     const course = await prisma.course.findUnique({
@@ -38,9 +44,10 @@ export async function createChapter(
       data: {
         title: data.title,
         description: data.description || "",
+        videoUrl: data.videoUrl,
         courseId,
         position: chapterCount + 1,
-        isPublished: true, // Publish chapters by default
+        isPublished: true,
       },
     });
 

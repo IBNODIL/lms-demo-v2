@@ -31,6 +31,7 @@ export function ChaptersList({
   const [chapters, setChapters] = useState(initialChapters);
   const [showNew, setShowNew] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
@@ -41,18 +42,25 @@ export function ChaptersList({
       return;
     }
 
+    if (!newVideoUrl.trim()) {
+      setError("Video URL is required to create a chapter");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const result = await createChapter(courseId, {
         title: newTitle,
+        videoUrl: newVideoUrl,
       });
 
       if (result.success && result.chapter) {
         setChapters([...chapters, result.chapter]);
         onChaptersChange([...chapters, result.chapter]);
         setNewTitle("");
+        setNewVideoUrl("");
         setShowNew(false);
       } else {
         setError(result.error || "Failed to create chapter");
@@ -115,7 +123,7 @@ export function ChaptersList({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chapter Title
+                Chapter Title <span className="text-red-600">*</span>
               </label>
               <Input
                 value={newTitle}
@@ -125,10 +133,24 @@ export function ChaptersList({
                 className="w-full"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Video URL <span className="text-red-600">*</span>
+              </label>
+              <Input
+                value={newVideoUrl}
+                onChange={(e) => setNewVideoUrl(e.target.value)}
+                placeholder="Enter video URL or upload video"
+                disabled={loading}
+                className="w-full"
+                type="url"
+              />
+              <p className="text-xs text-gray-500 mt-1">Video is required to create a chapter</p>
+            </div>
             <div className="flex gap-4">
               <Button
                 onClick={handleAddChapter}
-                disabled={loading || !newTitle.trim()}
+                disabled={loading || !newTitle.trim() || !newVideoUrl.trim()}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Create Chapter
@@ -137,6 +159,7 @@ export function ChaptersList({
                 onClick={() => {
                   setShowNew(false);
                   setNewTitle("");
+                  setNewVideoUrl("");
                 }}
                 disabled={loading}
                 variant="outline"

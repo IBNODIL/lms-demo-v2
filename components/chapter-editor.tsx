@@ -281,7 +281,7 @@ export function ChapterEditor({
 
         {/* Save Confirmation Dialog */}
         {showConfirmDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
             <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 mx-4">
               <h3 className="text-lg font-bold text-gray-900 mb-2">Save Changes?</h3>
               <p className="text-gray-600 mb-6">

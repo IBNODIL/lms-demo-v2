@@ -192,7 +192,7 @@ export default function ViewChapterPage({
   const nextChapter = chapters.find((c) => c.position === currentPosition + 1);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-gray-100">
       <div className="container mx-auto px-4 py-8">
         <Link href={`/courses/${params.courseId}`} className="text-blue-600 hover:text-blue-700 mb-6 inline-flex items-center gap-2 group">
           <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -204,7 +204,7 @@ export default function ViewChapterPage({
             {course.title} • Chapter {chapter.position}
           </p>
           <h1 className="text-4xl font-bold text-gray-900 mt-3 mb-3">{chapter.title}</h1>
-          <div className="h-1 w-20 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"></div>
+          <div className="h-1 w-20 bg-linear-to-r from-blue-600 to-blue-400 rounded-full"></div>
         </div>
 
         {chapter.videoUrl ? (
@@ -212,7 +212,7 @@ export default function ViewChapterPage({
             <VideoPlayer videoUrl={chapter.videoUrl} title={chapter.title} />
           </div>
         ) : (
-          <div className="mb-12 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 aspect-video flex items-center justify-center text-gray-600 shadow-lg">
+          <div className="mb-12 rounded-2xl bg-linear-to-br from-gray-200 to-gray-300 aspect-video flex items-center justify-center text-gray-600 shadow-lg">
             <div className="text-center">
               <Play size={48} className="mx-auto mb-3 opacity-50" />
               <p className="text-lg">No video available for this chapter</p>
@@ -273,7 +273,7 @@ export default function ViewChapterPage({
           <div>
             {nextChapter ? (
               <Link href={`/courses/${params.courseId}/chapters/${nextChapter.id}`}>
-                <button className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold transition-all flex items-center gap-2 group shadow-md hover:shadow-lg">
+                <button className="px-6 py-3 rounded-lg bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold transition-all flex items-center gap-2 group shadow-md hover:shadow-lg">
                   <span>Next</span>
                   <span className="hidden md:inline text-sm">: {nextChapter.title}</span>
                   <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />

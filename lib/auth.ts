@@ -1,16 +1,68 @@
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { betterAuth } from "better-auth";
+import { resend } from "@/lib/email";
+import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-      provider: "postgresql"
+    provider: "postgresql"
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
+    requireEmailVerification: true,
+    autoSignInAfterVerification: true,
+
+    sendVerificationEmail: async ({ user }: { user: { email: string; name?: string } }) => {
+      try {
+        console.log("🔐 sendVerificationEmail callback triggered");
+        console.log("📧 User email:", user.email);
+        
+        const verificationCode =
+          Math.floor(100000 + Math.random() * 900000).toString();
+
+        console.log("🔢 Generated 6-digit code:", verificationCode);
+        
+        await prisma.verificationToken.deleteMany({
+          where: { identifier: user.email },
+        });
+
+        const stored = await prisma.verificationToken.create({
+          data: {
+            identifier: user.email,
+            value: verificationCode,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          },
+        });
+
+        console.log("✅ Stored verification code:", stored.value);
+
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "onboarding@resend.dev",
+          to: user.email,
+          subject: "Verify your email for Antonio LMS",
+          html: getVerificationEmailTemplate(
+            verificationCode,
+            user.name || undefined
+          ),
+        });
+
+        console.log("📨 Email sent");
+
+      } catch (error) {
+        console.error("❌ Failed to send verification email:", error);
+        throw error;
+      }
+    },
   },
-  secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-change-in-production",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+
+  secret:
+    process.env.BETTER_AUTH_SECRET ||
+    "default-secret-key-change-in-production",
+
+  baseURL:
+    process.env.BETTER_AUTH_URL ||
+    "http://localhost:3000",
+
   trustHost: true,
 });

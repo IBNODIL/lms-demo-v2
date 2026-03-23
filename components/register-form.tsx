@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/validation";
@@ -27,6 +27,10 @@ export default function RegisterForm() {
   const [codeMessage, setCodeMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [changeEmailMode, setChangeEmailMode] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
 
   const {
     register,
@@ -38,6 +42,17 @@ export default function RegisterForm() {
   });
 
   const password = watch("password");
+
+  // Resend timer effect
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const onSubmit = async (data: FormData) => {
     setServerError(null);
@@ -112,6 +127,7 @@ export default function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: verificationCode }),
+        credentials: "include", // Include cookies for session establishment
       });
 
       const data = await response.json();
@@ -129,6 +145,13 @@ export default function RegisterForm() {
         type: "success",
         text: "Email verified successfully! Redirecting...",
       });
+
+      // Refresh the auth client session to pick up the newly created session
+      try {
+        await authClient.getSession();
+      } catch (sessionErr) {
+        console.warn("Session refresh warning:", sessionErr);
+      }
 
       setTimeout(() => {
         router.push("/dashboard");
@@ -153,14 +176,22 @@ export default function RegisterForm() {
     setResendMessage(null);
 
     try {
-      const result = await resendVerificationEmail(registeredEmail);
+      const emailToUse = newEmail || registeredEmail;
+      const result = await resendVerificationEmail(registeredEmail, newEmail || undefined);
       
       if (result.success) {
+        // Update the email if changed
+        if (newEmail) {
+          setRegisteredEmail(newEmail);
+          setNewEmail("");
+          setChangeEmailMode(false);
+        }
         setResendMessage({
           type: "success",
-          text: "Verification code sent! Check your email.",
+          text: `Verification code sent to ${emailToUse}!`,
         });
         setVerificationCode("");
+        setResendTimer(60); // Start 60-second cooldown
       } else {
         setResendMessage({
           type: "error",
@@ -189,6 +220,37 @@ export default function RegisterForm() {
             Enter the code below to complete your registration. The code will expire in 15 minutes.
           </p>
         </div>
+
+        {changeEmailMode ? (
+          <div className="space-y-3 bg-yellow-50 p-4 rounded border border-yellow-200">
+            <label className="block text-sm font-medium text-gray-700">Change Email Address</label>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="Enter new email address"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleResendEmail()}
+                disabled={!newEmail || resendLoading || resendTimer > 0 || changingEmail}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 rounded-lg font-semibold transition"
+              >
+                {changingEmail ? "Sending..." : "Send to New Email"}
+              </button>
+              <button
+                onClick={() => {
+                  setChangeEmailMode(false);
+                  setNewEmail("");
+                }}
+                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg font-semibold transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">Verification Code</label>
@@ -234,13 +296,32 @@ export default function RegisterForm() {
           </div>
         )}
 
-        <button
-          onClick={handleResendEmail}
-          disabled={resendLoading}
-          className="w-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-800 py-2 rounded-lg font-semibold transition"
-        >
-          {resendLoading ? "Sending..." : "Resend Verification Code"}
-        </button>
+        {resendTimer > 0 && (
+          <div className="p-3 rounded text-sm bg-amber-50 text-amber-800 border border-amber-200">
+            You can request a new code in <strong>{resendTimer}</strong> second{resendTimer !== 1 ? 's' : ''}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <button
+            onClick={handleResendEmail}
+            disabled={resendLoading || resendTimer > 0}
+            className="w-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 py-2 rounded-lg font-semibold transition"
+          >
+            {resendLoading ? "Sending..." : resendTimer > 0 ? `Resend Code (${resendTimer}s)` : "Resend Verification Code"}
+          </button>
+
+          <button
+            onClick={() => {
+              setChangeEmailMode(!changeEmailMode);
+              setNewEmail("");
+            }}
+            disabled={resendLoading}
+            className="w-full bg-orange-100 hover:bg-orange-200 disabled:opacity-50 text-orange-800 py-2 rounded-lg font-semibold transition text-sm"
+          >
+            {changeEmailMode ? "Cancel" : "📧 Change Email"}
+          </button>
+        </div>
 
         <Link
           href="/login"

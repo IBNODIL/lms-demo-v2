@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+const SESSION_COOKIE_NAME = "better-auth.session_token";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -51,19 +53,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // If already verified, just return success
-    if (user.emailVerified) {
-      await prisma.verificationToken.delete({
-        where: { id: verificationToken.id },
-      });
-      
-      return Response.json({
-        success: true,
-        message: "Email already verified",
-        user,
-      });
-    }
-
     // Mark email as verified
     const updatedUser = await prisma.user.update({
       where: { email: verificationToken.identifier },
@@ -75,11 +64,42 @@ export async function POST(req: Request) {
       where: { id: verificationToken.id },
     });
 
-    return Response.json({
-      success: true,
-      message: "Email verified successfully",
-      user: updatedUser,
-    });
+    // Create a session for the user (auto-login)
+    try {
+      const sessionData = await prisma.session.create({
+        data: {
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          userId: user.id,
+          ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
+          userAgent: req.headers.get("user-agent") || "unknown",
+        },
+      });
+
+      const response = Response.json({
+        success: true,
+        message: "Email verified successfully",
+        user: updatedUser,
+        session: { id: sessionData.id },
+      });
+
+      // Set the session cookie
+      const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
+      const secure = process.env.NODE_ENV === "production";
+      const cookieValue = `${SESSION_COOKIE_NAME}=${sessionData.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${
+        secure ? "; Secure" : ""
+      }`;
+      response.headers.set("Set-Cookie", cookieValue);
+
+      return response;
+    } catch (sessionErr) {
+      console.warn("Session creation during email verification failed:", sessionErr);
+      // Even if session creation fails, email verification was successful
+      return Response.json({
+        success: true,
+        message: "Email verified successfully",
+        user: updatedUser,
+      });
+    }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Email verification failed";
     console.error("Email verification callback error:", error);

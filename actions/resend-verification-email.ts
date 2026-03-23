@@ -4,9 +4,10 @@ import { resend } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
-export async function resendVerificationEmail(email: string) {
+export async function resendVerificationEmail(email: string, newEmail?: string) {
   try {
-    console.log("🔄 Resend verification email requested for:", email);
+    const targetEmail = newEmail || email;
+    console.log("🔄 Resend verification email requested for:", email, "-> Target:", targetEmail);
     
     // Find user
     const user = await prisma.user.findUnique({
@@ -30,11 +31,32 @@ export async function resendVerificationEmail(email: string) {
       };
     }
 
+    // If changing email, check if new email is already in use
+    if (newEmail && newEmail !== email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: newEmail },
+      });
+      if (existingUser) {
+        console.log("❌ Email already in use:", newEmail);
+        return {
+          error: "Email already in use",
+          success: false,
+        };
+      }
+
+      // Update user email
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { email: newEmail },
+      });
+      console.log("📧 Updated user email to:", newEmail);
+    }
+
     // Delete ALL old tokens for this email
     await prisma.verificationToken.deleteMany({
-      where: { identifier: email },
+      where: { identifier: targetEmail },
     });
-    console.log("🗑️ Deleted old tokens for:", email);
+    console.log("🗑️ Deleted old tokens for:", targetEmail);
 
     // Generate NEW 6-digit code
     const token = Math.floor(100000 + Math.random() * 900000).toString();
@@ -43,7 +65,7 @@ export async function resendVerificationEmail(email: string) {
     // Create new verification token
     const created = await prisma.verificationToken.create({
       data: {
-        identifier: email,
+        identifier: targetEmail,
         value: token,
         expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
       },
@@ -53,11 +75,11 @@ export async function resendVerificationEmail(email: string) {
     // Send verification email
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "onboarding@resend.dev",
-      to: email,
+      to: targetEmail,
       subject: "Verify your email for Antonio LMS",
       html: getVerificationEmailTemplate(token, user.name || undefined),
     });
-    console.log("📨 Email sent successfully");
+    console.log("📨 Email sent successfully to:", targetEmail);
 
     return {
       success: true,

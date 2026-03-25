@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { resend } from "@/lib/email";
+import { transporter } from "@/lib/email";
 import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
 export async function POST(req: Request) {
@@ -41,8 +41,8 @@ export async function POST(req: Request) {
         console.log("📧 Sending verification email for:", result.user.email);
         console.log("🔢 Verification code:", verificationCode);
 
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "onboarding@resend.dev",
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM!,
           to: result.user.email,
           subject: "Verify your email for Antonio LMS",
           html: getVerificationEmailTemplate(

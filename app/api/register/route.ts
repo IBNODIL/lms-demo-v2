@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { transporter } from "@/lib/email";
+import { transporter, sendEmail } from "@/lib/email";
 import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
 export async function POST(req: Request) {

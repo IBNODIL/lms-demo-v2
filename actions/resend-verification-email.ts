@@ -1,6 +1,6 @@
 "use server";
 
-import { resend } from "@/lib/email";
+import { transporter } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
@@ -73,8 +73,8 @@ export async function resendVerificationEmail(email: string, newEmail?: string) 
     console.log("✅ Created verification token:", created.value);
 
     // Send verification email
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM || "onboarding@resend.dev",
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM!,
       to: targetEmail,
       subject: "Verify your email for Antonio LMS",
       html: getVerificationEmailTemplate(token, user.name || undefined),

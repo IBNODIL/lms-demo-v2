@@ -1,7 +1,7 @@
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { betterAuth } from "better-auth";
-import { resend } from "@/lib/email";
+import { transporter } from "@/lib/email";
 import { getVerificationEmailTemplate } from "@/lib/email-templates";
 
 export const auth = betterAuth({
@@ -45,8 +45,8 @@ export const auth = betterAuth({
 
         console.log("✅ Stored verification code:", stored.value);
 
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "onboarding@resend.dev",
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM!,
           to: user.email,
           subject: "Verify your email for Antonio LMS",
           html: getVerificationEmailTemplate(

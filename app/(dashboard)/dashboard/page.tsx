@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   });
 
   // Map to course list format
-  const courses = enrollments.map((e) => ({
+  const courses = enrollments.map((e: typeof enrollments[0]) => ({
     id: e.course.id,
     title: e.course.title,
     description: e.course.description || undefined,

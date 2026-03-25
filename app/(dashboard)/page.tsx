@@ -87,7 +87,7 @@ export default async function DashboardPage() {
 
   const completedLessons = progressData[0]?._count.id || 0;
   const totalLessons = enrollments.reduce(
-    (sum, e) => sum + e.course.chapters.length,
+    (sum: number, e: typeof enrollments[0]) => sum + e.course.chapters.length,
     0
   );
   const progressPercentage =

@@ -12,7 +12,6 @@ interface ProgressTrackerProps {
 }
 
 export function ProgressTracker({
-  courseId,
   chapterId,
   chapterTitle,
   totalChapters,
@@ -76,7 +75,7 @@ export function ProgressTracker({
       {/* Alert about progress not saving */}
       {showAlert && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded flex gap-3 items-start">
-          <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
+          <AlertCircle className="text-yellow-600 shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <h3 className="font-semibold text-yellow-800">Note</h3>
             <p className="text-yellow-700 text-sm">

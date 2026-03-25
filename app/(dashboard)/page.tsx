@@ -66,18 +66,6 @@ export default async function DashboardPage() {
 
   const enrolledCourses = enrollmentData;
 
-  // Fetch user statistics
-  const userStats = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      _count: {
-        select: {
-          purchases: true,
-        },
-      },
-    },
-  });
-
   // Get user's progress
   const progressData = await prisma.progress.groupBy({
     by: ["userId"],

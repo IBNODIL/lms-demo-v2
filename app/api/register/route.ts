@@ -13,10 +13,11 @@ export async function POST(req: Request) {
     });
 
     return Response.json(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Register failed";
     console.error("Registration error:", error);
     return Response.json(
-      { error: error.message || "Register failed" },
+      { error: errorMessage },
       { status: 400 }
     );
   }

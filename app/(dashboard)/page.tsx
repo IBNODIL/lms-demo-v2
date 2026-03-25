@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   // Get progress for each course
   const enrollmentData = await Promise.all(
-    enrollments.map(async (e) => {
+    enrollments.map(async (e: typeof enrollments[0]) => {
       const completedChapters = await prisma.progress.count({
         where: {
           userId: session.user.id,

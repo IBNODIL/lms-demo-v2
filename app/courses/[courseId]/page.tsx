@@ -162,7 +162,7 @@ export default async function CourseDetailsPage({
             </h2>
             {course.chapters.length > 0 ? (
               <div className="space-y-3">
-                {course.chapters.map((chapter) => (
+                {course.chapters.map((chapter: { id: string; title: string; description: string | null; position: number; isPublished: boolean; videoUrl: string | null }) => (
                   <div key={chapter.id}>
                     {isEnrolled ? (
                       <Link

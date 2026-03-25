@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json({ completedCount: 0, totalCount: 0 });
     }
 
-    const chapterIds = chapters.map((c) => c.id);
+    const chapterIds = chapters.map((c: { id: string }) => c.id);
 
     // Get completed chapters for this user
     const completedProgress = await prisma.progress.findMany({

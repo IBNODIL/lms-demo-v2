@@ -200,7 +200,7 @@ export function getWelcomeEmailTemplate(userName?: string): string {
             <p>Start learning today and explore our courses designed to help you grow your skills.</p>
 
             <div style="text-align: center;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" class="cta-button">Go to Dashboard</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="cta-button">Go to Dashboard</a>
             </div>
           </div>
 

@@ -69,8 +69,7 @@ export const auth = betterAuth({
     "default-secret-key-change-in-production",
 
   baseURL:
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000",
+    process.env.NEXT_PUBLIC_APP_URL,
 
   trustHost: true,
 });

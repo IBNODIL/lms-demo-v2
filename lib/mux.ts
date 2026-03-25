@@ -12,7 +12,7 @@ export async function createMuxUpload(
 ) {
   try {
     const upload = await mux.video.uploads.create({
-      cors_origin: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      cors_origin: process.env.NEXT_PUBLIC_APP_URL,
       new_asset_settings: {
         playback_policy: ["public"],
         encoding_tier: "baseline",

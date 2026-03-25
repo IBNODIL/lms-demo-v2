@@ -36,9 +36,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const headersList = await headers();
-    const session = await auth.api.getSession({
-      headers: headersList,
-    });
+    
+    // Get session token from cookies
+    const cookieHeader = headersList.get("cookie");
+    const sessionTokenMatch = cookieHeader?.match(/better-auth\.session_token=([^;]+)/);
+    const sessionToken = sessionTokenMatch ? sessionTokenMatch[1] : null;
+
+    let session = null;
+    if (sessionToken) {
+      const dbSession = await prisma.session.findUnique({
+        where: { token: sessionToken },
+        include: { user: true },
+      });
+
+      if (dbSession && dbSession.expiresAt > new Date()) {
+        session = { user: dbSession.user };
+      }
+    }
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,8 +75,8 @@ export async function POST(request: Request) {
 
     if (!course || course.userId !== session.user.id) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Unauthorized - you don't own this course" },
+        { status: 403 }
       );
     }
 

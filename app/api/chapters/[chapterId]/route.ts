@@ -83,10 +83,17 @@ export async function PUT(
       },
     });
 
-    if (!chapter || chapter.course.userId !== session.user.id) {
+    if (!chapter) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Chapter not found" },
+        { status: 404 }
+      );
+    }
+    
+    if (chapter.course.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to update this chapter" },
+        { status: 403 }
       );
     }
 
@@ -138,10 +145,17 @@ export async function DELETE(
       },
     });
 
-    if (!chapter || chapter.course.userId !== session.user.id) {
+    if (!chapter) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Chapter not found" },
+        { status: 404 }
+      );
+    }
+    
+    if (chapter.course.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this chapter" },
+        { status: 403 }
       );
     }
 

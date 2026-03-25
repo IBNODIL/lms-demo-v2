@@ -22,14 +22,40 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    // Teachers can see all chapters, students only see published
+    // Check access: course owner or enrolled student (if published)
     const isOwner = session?.user?.id === course.userId;
+    
+    if (!isOwner) {
+      // Non-owners can only see published courses
+      if (!course.published) {
+        return NextResponse.json(
+          { error: "You don't have permission to view this course" },
+          { status: 403 }
+        );
+      }
+      
+      // Only show published chapters for non-owners
+      const courseWithChapters = await prisma.course.findUnique({
+        where: { id: courseId },
+        include: {
+          chapters: {
+            where: { isPublished: true },
+            orderBy: { position: "asc" },
+          },
+          user: {
+            select: { name: true, email: true },
+          },
+        },
+      });
+      
+      return NextResponse.json(courseWithChapters);
+    }
 
+    // Owner can see all chapters (published and unpublished)
     const courseWithChapters = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
         chapters: {
-          where: isOwner ? {} : { isPublished: true },
           orderBy: { position: "asc" },
         },
         user: {
@@ -67,10 +93,17 @@ export async function PUT(
       where: { id: courseId },
     });
 
-    if (!course || course.userId !== session.user.id) {
+    if (!course) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Course not found" },
+        { status: 404 }
+      );
+    }
+    
+    if (course.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to update this course" },
+        { status: 403 }
       );
     }
 
@@ -118,10 +151,17 @@ export async function DELETE(
       where: { id: courseId },
     });
 
-    if (!course || course.userId !== session.user.id) {
+    if (!course) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Course not found" },
+        { status: 404 }
+      );
+    }
+    
+    if (course.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this course" },
+        { status: 403 }
       );
     }
 

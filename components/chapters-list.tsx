@@ -80,8 +80,15 @@ export function ChaptersList({
 
       if (result.success) {
         const updated = chapters.filter((c) => c.id !== chapterId);
-        setChapters(updated);
-        onChaptersChange(updated);
+        
+        // Recalculate positions (1-based index)
+        const reordered = updated.map((chapter, index) => ({
+          ...chapter,
+          position: index + 1,
+        }));
+        
+        setChapters(reordered);
+        onChaptersChange(reordered);
       } else {
         setError(result.error || "Failed to delete chapter");
       }
@@ -189,7 +196,7 @@ export function ChaptersList({
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4">
-            {chapters.map((chapter) => (
+            {chapters.map((chapter, index) => (
               <div
                 key={chapter.id}
                 className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
@@ -198,7 +205,7 @@ export function ChaptersList({
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gray-400 w-8">
-                        {chapter.position}
+                        {index + 1}
                       </span>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">

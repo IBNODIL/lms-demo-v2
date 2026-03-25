@@ -65,8 +65,11 @@ export async function POST(req: Request) {
 
     // Create a session for the user (auto-login)
     try {
+      const sessionToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      
       const sessionData = await prisma.session.create({
         data: {
+          token: sessionToken, // Set the token explicitly
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
           userId: user.id,
           ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
@@ -78,13 +81,13 @@ export async function POST(req: Request) {
         success: true,
         message: "Email verified successfully",
         user: { id: user.id, email: user.email },
-        session: { id: sessionData.id },
+        session: { id: sessionData.id, token: sessionData.token },
       });
 
-      // Set the session cookie
+      // Set the session cookie with the token value
       const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
       const secure = process.env.NODE_ENV === "production";
-      const cookieValue = `${SESSION_COOKIE_NAME}=${sessionData.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${
+      const cookieValue = `${SESSION_COOKIE_NAME}=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${
         secure ? "; Secure" : ""
       }`;
       response.headers.set("Set-Cookie", cookieValue);

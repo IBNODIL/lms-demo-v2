@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { VideoPlayer } from "@/components/video-player";
+import { ProgressTracker } from "@/components/progress-tracker";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play, BookOpen } from "lucide-react";
 
@@ -44,6 +45,8 @@ export default function ViewChapterPage({
   const [error, setError] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [courseChapters, setCourseChapters] = useState<NavChapter[]>([]);
+  const [completedChapters, setCompletedChapters] = useState(0);
 
   // Get params from promise
   useEffect(() => {
@@ -116,6 +119,17 @@ export default function ViewChapterPage({
           } catch {
             // proceed without chapter list
           }
+        }
+
+        // Fetch completed chapters count
+        try {
+          const progressRes = await fetch(`/api/courses/${params.courseId}/progress`);
+          if (progressRes.ok) {
+            const progressData = await progressRes.json();
+            setCompletedChapters(progressData.completedCount || 0);
+          }
+        } catch {
+          // proceed without progress data
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -206,6 +220,17 @@ export default function ViewChapterPage({
           <h1 className="text-4xl font-bold text-gray-900 mt-3 mb-3">{chapter.title}</h1>
           <div className="h-1 w-20 bg-linear-to-r from-blue-600 to-blue-400 rounded-full"></div>
         </div>
+
+        {/* Progress Tracker */}
+        {isEnrolled && (
+          <ProgressTracker
+            courseId={params.courseId}
+            chapterId={chapter.id}
+            chapterTitle={chapter.title}
+            totalChapters={chapters.length}
+            completedChapters={completedChapters}
+          />
+        )}
 
         {chapter.videoUrl ? (
           <div className="mb-12 rounded-2xl overflow-hidden bg-black aspect-video shadow-2xl">

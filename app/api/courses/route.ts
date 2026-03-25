@@ -10,21 +10,19 @@ export async function GET() {
       headers: headersList,
     });
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get user role
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
+    console.log("📝 Session lookup result:", session ? `Found: ${session.user.id}` : "Not found");
+    console.log("🔍 Headers:", {
+      cookie: headersList.get("cookie"),
+      authorization: headersList.get("authorization"),
     });
 
     // Teachers can see all their own courses (including drafts)
     // Students only see published courses
+    // Unauthenticated users only see published courses
     let courses;
     
-    if (user?.role === "TEACHER") {
+    if (session?.user && session.user.role === "TEACHER") {
+      // Teachers see their own courses
       courses = await prisma.course.findMany({
         where: {
           userId: session.user.id,
@@ -40,7 +38,7 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
       });
     } else {
-      // Students see all published courses
+      // Students and unauthenticated users see all published courses
       courses = await prisma.course.findMany({
         where: {
           published: true,
@@ -71,22 +69,32 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const headersList = await headers();
-    const session = await auth.api.getSession({
-      headers: headersList,
-    });
+    
+    // Get session token from cookies
+    const cookieHeader = headersList.get("cookie");
+    const sessionTokenMatch = cookieHeader?.match(/better-auth\.session_token=([^;]+)/);
+    const sessionToken = sessionTokenMatch ? sessionTokenMatch[1] : null;
+
+    let session = null;
+    if (sessionToken) {
+      // Find session by token
+      const dbSession = await prisma.session.findUnique({
+        where: { token: sessionToken },
+        include: { user: true },
+      });
+
+      if (dbSession && dbSession.expiresAt > new Date()) {
+        session = { user: dbSession.user };
+      }
+    }
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the user to get the role
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== "TEACHER") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Check if user is a teacher
+    if (session.user.role !== "TEACHER") {
+      return NextResponse.json({ error: "Only teachers can create courses" }, { status: 403 });
     }
 
     const body = await request.json();
